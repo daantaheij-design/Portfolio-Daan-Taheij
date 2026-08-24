@@ -101,3 +101,15 @@ html.lenis body {
 .lenis.lenis-stopped {
   overflow: hidden;
 }
+
+/* The custom cursor sits at z-[999] and is hidden behind the gallery
+   overlay (z-[1000]) by design, so restore a normal, visible cursor for
+   everything inside it. */
+.gallery-overlay,
+.gallery-overlay * {
+  cursor: auto;
+}
+
+.gallery-overlay button {
+  cursor: pointer;
+}

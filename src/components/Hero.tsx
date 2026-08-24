@@ -9,10 +9,64 @@ import HorizontalMarquee from "./HorizontalMarquee";
 const HERO_PHOTO_URL = "/images/hero/daan-pf.webp";
 // Paper color the photo fades out to (matches --color-paper in globals.css).
 const HERO_PHOTO_FADE_RGB = "244, 241, 234";
-// Index of the character TAHEIJ's portrait window is centred on the seam
-// after (0-based: T=0, A=1, H=2, E=3, I=4, J=5) — the A/H seam gives the
-// widest, most natural pair of letters to frame a full head in.
+// Single anchor letter in TAHEIJ (0-based: T=0, A=1, H=2, E=3, I=4, J=5).
+// "A" has the widest, most solid cap of the six at this bold display weight
+// — "H"/"E" are similar width but read as noticeably busier once half-hidden
+// by the paper wash, "T"/"I"/"J" are mostly a narrow stem with wide empty
+// margins either side that can't hold a full head width-wise.
 const HERO_PHOTO_ANCHOR_INDEX = 1;
+// Subtle scroll-linked zoom on the portrait itself (independent of, and on
+// top of, the existing whole-word scale-up below).
+const HERO_PHOTO_ZOOM_MAX = 1.05;
+
+type MaskState = {
+  chars: HTMLElement[];
+  rects: DOMRect[];
+  minX: number;
+  minY: number;
+  boxWidth: number;
+  boxHeight: number;
+  baseSize: number;
+  photoLeftBase: number;
+  photoTopBase: number;
+  driftRange: number;
+  gradientLayer: string;
+};
+
+let measureCanvas: HTMLCanvasElement | null = null;
+
+/**
+ * Real rendered glyph ink metrics (cap-height etc.), found via canvas
+ * measureText against the *uppercase* letter — the DOM text is lowercase
+ * ("Taheij"), `uppercase` is applied purely visually via CSS, and canvas
+ * measureText doesn't know about that text-transform. Measuring the
+ * lowercase glyph gives a shorter, differently-positioned ink band than
+ * what's actually painted on screen, which silently reintroduces cropping.
+ */
+function getInkMetrics(el: HTMLElement, text: string) {
+  if (!measureCanvas) measureCanvas = document.createElement("canvas");
+  const ctx = measureCanvas.getContext("2d");
+  if (!ctx) return null;
+
+  const cs = getComputedStyle(el);
+  ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+  const m = ctx.measureText(text);
+
+  if (
+    typeof m.actualBoundingBoxAscent !== "number" ||
+    typeof m.fontBoundingBoxAscent !== "number" ||
+    Number.isNaN(m.actualBoundingBoxAscent)
+  ) {
+    return null;
+  }
+
+  return {
+    ascent: m.actualBoundingBoxAscent,
+    descent: m.actualBoundingBoxDescent,
+    fontAscent: m.fontBoundingBoxAscent,
+    fontDescent: m.fontBoundingBoxDescent,
+  };
+}
 
 function Chars({ text }: { text: string }) {
   return (
@@ -30,6 +84,8 @@ export default function Hero() {
   const wrapper = useRef<HTMLDivElement>(null);
   const root = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
+  const maskStateRef = useRef<MaskState | null>(null);
+  const progressRef = useRef(0);
 
   useLayoutEffect(() => {
     if (reduced) return;
@@ -61,6 +117,53 @@ export default function Hero() {
     return () => ctx.revert();
   }, [reduced]);
 
+  // Paints the mask at a given scroll progress (0 = rest, 1 = fully scrolled
+  // through the hero). Reads cached measurements from maskStateRef so it can
+  // be called every scrub tick without re-measuring the DOM.
+  const renderMask = (progress: number) => {
+    const state = maskStateRef.current;
+    if (!state) return;
+    progressRef.current = progress;
+
+    const {
+      chars,
+      rects,
+      minX,
+      minY,
+      boxWidth,
+      boxHeight,
+      baseSize,
+      photoLeftBase,
+      photoTopBase,
+      driftRange,
+      gradientLayer,
+    } = state;
+
+    const zoom = 1 + (HERO_PHOTO_ZOOM_MAX - 1) * progress;
+    const size = baseSize * zoom;
+    const sizeDelta = (size - baseSize) / 2;
+    const drift = -driftRange * progress;
+
+    const photoLeft = photoLeftBase - sizeDelta;
+    const photoTop = photoTopBase - sizeDelta + drift;
+
+    chars.forEach((el, i) => {
+      const localX = rects[i].left - minX;
+      const localY = rects[i].top - minY;
+
+      el.style.backgroundImage = [gradientLayer, `url(${HERO_PHOTO_URL})`].join(", ");
+      el.style.backgroundSize = [
+        `${boxWidth}px ${boxHeight}px`,
+        `${size}px ${size}px`,
+      ].join(", ");
+      el.style.backgroundPosition = [
+        `${-localX}px ${-localY}px`,
+        `${photoLeft - localX}px ${photoTop - localY}px`,
+      ].join(", ");
+      el.classList.add("text-image-mask");
+    });
+  };
+
   useLayoutEffect(() => {
     const applyPhotoMask = () => {
       const wrap = root.current?.querySelector<HTMLElement>(".hero-name-taheij");
@@ -84,53 +187,84 @@ export default function Hero() {
       const boxHeight = maxY - minY;
       if (boxWidth <= 0 || boxHeight <= 0) return;
 
-      // Show the full (square) portrait undistorted, sized off the line's
-      // own height — no vertical crop, no stretch. At this natural size it
-      // lands on roughly one to two letters, anchored at the A/H seam so a
-      // full head reads clearly there. On narrow viewports the line height
-      // (and so the portrait) is much smaller in absolute pixels, so we
-      // scale it up a little there to keep the face legible — still well
-      // within "one to three letters".
-      const mobileBoost = window.innerWidth < 640 ? 1.3 : window.innerWidth < 1024 ? 1.15 : 1;
-      const anchor = Math.min(HERO_PHOTO_ANCHOR_INDEX, chars.length - 2);
-      const anchorCenterX =
-        (rects[anchor].right + rects[anchor + 1].left) / 2 - minX;
-      const photoSize = boxHeight * mobileBoost;
-      const photoLeft = anchorCenterX - photoSize / 2;
+      const anchor = Math.min(HERO_PHOTO_ANCHOR_INDEX, chars.length - 1);
+      const anchorEl = chars[anchor];
+      const anchorRect = rects[anchor];
+      const anchorWidth = anchorRect.right - anchorRect.left;
+      const anchorCenterX = (anchorRect.left + anchorRect.right) / 2 - minX;
+
+      // The CSS line box (boxHeight) includes leading above/below the
+      // glyph's actual ink — sizing the portrait off boxHeight alone pushes
+      // its top/bottom past the visible glyph shape, which reads as a
+      // cropped head (hair/chin clipped away). Real canvas glyph metrics
+      // give us the true ink band to fit the full, undistorted photo inside.
+      const metrics = getInkMetrics(
+        anchorEl,
+        (anchorEl.textContent || "A").toUpperCase()
+      );
+      let inkTop: number;
+      let inkHeight: number;
+      if (metrics) {
+        const extraLeading = boxHeight - (metrics.fontAscent + metrics.fontDescent);
+        const baselineFromTop = extraLeading / 2 + metrics.fontAscent;
+        inkTop = baselineFromTop - metrics.ascent;
+        inkHeight = metrics.ascent + metrics.descent;
+      } else {
+        // Fallback for browsers without actualBoundingBox* support.
+        inkTop = boxHeight * 0.14;
+        inkHeight = boxHeight * 0.72;
+      }
+
+      // On narrow viewports the glyph (and so the ink band) is much smaller
+      // in absolute pixels, so we scale the portrait up a little there to
+      // keep the face legible — still comfortably contained by one letter.
+      const mobileBoost =
+        window.innerWidth < 640 ? 1.22 : window.innerWidth < 1024 ? 1.1 : 1;
+      const baseSize =
+        Math.min(inkHeight * 0.96, anchorWidth * 0.88) * mobileBoost;
+      const photoLeftBase = anchorCenterX - baseSize / 2;
+      // "A"'s enclosed counter (the hollow triangle above its crossbar) sits
+      // in the upper portion of the cap-height. Centering the portrait in
+      // the full ink band puts that hollow over the hair/brow area rather
+      // than the eyes, nose or mouth — the least disruptive place for a
+      // single uppercase glyph's negative space to interrupt a face.
+      const photoTopBase = inkTop + inkHeight / 2 - baseSize / 2;
+      // Keep the scroll-linked drift safely inside the ink band's own
+      // headroom (leaving margin for the zoom's own small inward shift too).
+      const topHeadroom = photoTopBase - inkTop;
+      const bottomHeadroom = inkTop + inkHeight - (photoTopBase + baseSize);
+      const driftRange = Math.max(0, Math.min(topHeadroom, bottomHeadroom)) * 0.6;
 
       // Radial paper-wash: stays fully clear over the photo itself, then
       // fades to solid, readable paper-white in both directions so the far
-      // letters (I, J and — on shorter crops — T) read as plain typography.
-      // The inner radius must sit at/just inside the photo's own half-width
-      // (photoSize / 2) — any gap between where the photo stops and where
-      // the wash starts opacifying leaves a "dead zone" where neither layer
-      // paints anything, showing raw (black) background through the text.
-      const innerR = photoSize * 0.48;
-      const outerR = photoSize * 1.05;
+      // letters read as plain typography. The inner radius sits at/just
+      // inside the photo's own half-width — any gap between where the photo
+      // stops and the wash starts opacifying leaves a "dead zone" where
+      // neither layer paints anything, showing raw background through the
+      // clipped text.
+      const innerR = baseSize * 0.48;
+      const outerR = baseSize * 1.05;
       const fade = [
         `rgba(${HERO_PHOTO_FADE_RGB}, 0) 0%`,
         `rgba(${HERO_PHOTO_FADE_RGB}, 0) ${((innerR / outerR) * 100).toFixed(1)}%`,
         `rgba(${HERO_PHOTO_FADE_RGB}, 0.96) 100%`,
       ].join(", ");
+      const gradientLayer = `radial-gradient(ellipse ${outerR}px ${outerR * 2.5}px at ${anchorCenterX}px ${inkTop + inkHeight / 2}px, ${fade})`;
 
-      chars.forEach((el, i) => {
-        const localX = rects[i].left - minX;
-        const localY = rects[i].top - minY;
-
-        el.style.backgroundImage = [
-          `radial-gradient(ellipse ${outerR}px ${outerR * 2.5}px at ${anchorCenterX}px ${boxHeight / 2}px, ${fade})`,
-          `url(${HERO_PHOTO_URL})`,
-        ].join(", ");
-        el.style.backgroundSize = [
-          `${boxWidth}px ${boxHeight}px`,
-          `${photoSize}px ${photoSize}px`,
-        ].join(", ");
-        el.style.backgroundPosition = [
-          `${-localX}px ${-localY}px`,
-          `${photoLeft - localX}px ${-localY}px`,
-        ].join(", ");
-        el.classList.add("text-image-mask");
-      });
+      maskStateRef.current = {
+        chars,
+        rects,
+        minX,
+        minY,
+        boxWidth,
+        boxHeight,
+        baseSize,
+        photoLeftBase,
+        photoTopBase,
+        driftRange,
+        gradientLayer,
+      };
+      renderMask(progressRef.current);
     };
 
     applyPhotoMask();
@@ -146,6 +280,8 @@ export default function Hero() {
     gsap.registerPlugin(ScrollTrigger);
 
     const ctx = gsap.context(() => {
+      const maskProgress = { v: 0 };
+
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: wrapper.current,
@@ -163,6 +299,11 @@ export default function Hero() {
         .to(
           ".hero-name-taheij",
           { scale: 1.5, xPercent: 5, ease: "none", duration: 1 },
+          0
+        )
+        .to(
+          maskProgress,
+          { v: 1, ease: "none", duration: 1, onUpdate: () => renderMask(maskProgress.v) },
           0
         )
         .to(

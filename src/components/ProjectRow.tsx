@@ -5,27 +5,20 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { motion, useMotionValue, useSpring } from "motion/react";
 import PlaceholderVisual from "./PlaceholderVisual";
-import { RevealLine, ScaleReveal } from "./Reveal";
+import { RevealLine } from "./Reveal";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import type { Project } from "@/data/projects";
-
-function ProjectGalleryImage({ src }: { src: string }) {
-  return (
-    <div className="project-visual-inner h-full w-full">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt="" className="h-full w-full object-cover" loading="lazy" />
-    </div>
-  );
-}
 
 export default function ProjectRow({
   project,
   index,
   total,
+  onOpenGallery,
 }: {
   project: Project;
   index: number;
   total: number;
+  onOpenGallery: (project: Project) => void;
 }) {
   const root = useRef<HTMLDivElement>(null);
   const magnetic = useRef<HTMLDivElement>(null);
@@ -33,6 +26,10 @@ export default function ProjectRow({
 
   const offset = index % 2 === 1;
   const overlay = index % 2 === 1;
+
+  const hasGallery = Boolean(
+    (project.images && project.images.length > 0) || project.coverImage
+  );
 
   const mx = useMotionValue(0);
   const my = useMotionValue(0);
@@ -131,9 +128,16 @@ export default function ProjectRow({
             <span className="relative font-mono text-xs text-muted md:text-sm">
               {project.number}
             </span>
-            <h3 className="font-display relative overflow-hidden text-3xl font-semibold uppercase leading-[0.95] tracking-tight sm:text-5xl md:text-7xl">
-              <RevealLine>{project.name}</RevealLine>
-            </h3>
+            <div className="relative">
+              <h3 className="font-display overflow-hidden text-3xl font-semibold uppercase leading-[0.95] tracking-tight sm:text-5xl md:text-7xl">
+                <RevealLine>{project.name}</RevealLine>
+              </h3>
+              {project.context && (
+                <span className="mt-1 block font-mono text-xs uppercase tracking-[0.1em] text-muted md:text-sm">
+                  {project.context}
+                </span>
+              )}
+            </div>
           </div>
           <span className="relative hidden shrink-0 font-mono text-xs text-muted md:block">
             {project.year}
@@ -160,7 +164,9 @@ export default function ProjectRow({
               total={total}
               tone={overlay ? "ink" : "paper"}
               label={project.category}
-              image={project.image}
+              image={project.coverImage}
+              interactive={hasGallery}
+              onOpen={hasGallery ? () => onOpenGallery(project) : undefined}
             />
           </div>
 
@@ -176,38 +182,20 @@ export default function ProjectRow({
                 <span className="font-mono text-xs text-paper/70 md:text-sm">
                   {project.number}
                 </span>
-                <h3 className="font-display overflow-hidden text-3xl font-semibold uppercase leading-[0.95] tracking-tight text-paper drop-shadow-sm sm:text-5xl md:text-7xl">
-                  <RevealLine>{project.name}</RevealLine>
-                </h3>
+                <div>
+                  <h3 className="font-display overflow-hidden text-3xl font-semibold uppercase leading-[0.95] tracking-tight text-paper drop-shadow-sm sm:text-5xl md:text-7xl">
+                    <RevealLine>{project.name}</RevealLine>
+                  </h3>
+                  {project.context && (
+                    <span className="mt-1 block font-mono text-xs uppercase tracking-[0.1em] text-paper/70 drop-shadow-sm md:text-sm">
+                      {project.context}
+                    </span>
+                  )}
+                </div>
               </div>
             </motion.div>
           )}
         </div>
-
-        {project.gallery && (
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4 md:mt-6 md:gap-5">
-            <ScaleReveal className="col-span-1 row-span-2">
-              <div className="relative aspect-[3/4] w-full overflow-hidden bg-paper-dim">
-                <ProjectGalleryImage src={project.gallery[0]} />
-              </div>
-            </ScaleReveal>
-            <ScaleReveal delay={0.06}>
-              <div className="relative aspect-square w-full overflow-hidden bg-paper-dim">
-                <ProjectGalleryImage src={project.gallery[1]} />
-              </div>
-            </ScaleReveal>
-            <ScaleReveal delay={0.12}>
-              <div className="relative aspect-square w-full overflow-hidden bg-paper-dim">
-                <ProjectGalleryImage src={project.gallery[2]} />
-              </div>
-            </ScaleReveal>
-            <ScaleReveal delay={0.18} className="col-span-2">
-              <div className="relative aspect-[21/9] w-full overflow-hidden bg-paper-dim">
-                <ProjectGalleryImage src={project.gallery[3]} />
-              </div>
-            </ScaleReveal>
-          </div>
-        )}
       </div>
 
       <div className="mt-4 flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.12em] text-muted md:mt-6">

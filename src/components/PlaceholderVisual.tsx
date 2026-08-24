@@ -11,12 +11,16 @@ export default function PlaceholderVisual({
   tone = "paper",
   label,
   image,
+  interactive = false,
+  onOpen,
 }: {
   index: string;
   total: number;
   tone?: "paper" | "ink";
   label: string;
   image?: string;
+  interactive?: boolean;
+  onOpen?: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const mx = useMotionValue(0.5);
@@ -42,13 +46,26 @@ export default function PlaceholderVisual({
 
   const isInk = tone === "ink";
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!onOpen) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onOpen();
+    }
+  };
+
   return (
     <div
       ref={ref}
       onMouseMove={handleMove}
       onMouseLeave={handleLeave}
+      onClick={onOpen}
+      onKeyDown={onOpen ? handleKeyDown : undefined}
+      role={onOpen ? "button" : undefined}
+      tabIndex={onOpen ? 0 : undefined}
+      aria-label={onOpen ? `Bekijk beelden — ${label}` : undefined}
       data-cursor="view"
-      data-cursor-label="Bekijk"
+      data-cursor-label={interactive ? "Bekijk beelden" : "Bekijk"}
       className={`group relative aspect-[4/5] w-full overflow-hidden sm:aspect-[16/10] ${
         isInk ? "bg-ink" : "bg-paper-dim"
       }`}
