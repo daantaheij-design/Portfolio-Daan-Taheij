@@ -1,7 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, type PanInfo, type Variants } from "motion/react";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  type PanInfo,
+  type Variants,
+} from "motion/react";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import type { Project } from "@/data/projects";
 
@@ -9,11 +15,22 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 const SLIDE_PERCENT = 8;
 const SWIPE_OFFSET_THRESHOLD = 50;
 const SWIPE_VELOCITY_THRESHOLD = 400;
+// Generic, data-driven zoom applied to whichever image is currently open —
+// not tied to any project, category or filename.
+const ZOOM_SCALE = 2;
 
 function galleryImages(project: Project): string[] {
   if (project.images && project.images.length > 0) return project.images;
   if (project.coverImage) return [project.coverImage];
   return [];
+}
+
+/** Where a point (in page coordinates) falls within an element, as a 0-100 %. */
+function pointToOriginPercent(point: { x: number; y: number }, rect: DOMRect) {
+  if (rect.width <= 0 || rect.height <= 0) return { x: 50, y: 50 };
+  const x = ((point.x - rect.left) / rect.width) * 100;
+  const y = ((point.y - rect.top) / rect.height) * 100;
+  return { x: Math.min(100, Math.max(0, x)), y: Math.min(100, Math.max(0, y)) };
 }
 
 export default function ProjectGallery({
@@ -26,12 +43,31 @@ export default function ProjectGallery({
   const reduced = useReducedMotion();
   const [index, setIndex] = useState(0);
   const [direction, setDirection] = useState<1 | -1>(1);
+  const [zoomed, setZoomed] = useState(false);
+  const [zoomOrigin, setZoomOrigin] = useState({ x: 50, y: 50 });
+  const [panConstraints, setPanConstraints] = useState({
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+  });
   const containerRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const naturalSizeRef = useRef<{ w: number; h: number } | null>(null);
+  const panX = useMotionValue(0);
+  const panY = useMotionValue(0);
 
   const images = project ? galleryImages(project) : [];
   const total = images.length;
   const isOpen = !!project && total > 0;
+
+  const resetZoom = useCallback(() => {
+    setZoomed(false);
+    panX.set(0);
+    panY.set(0);
+  }, [panX, panY]);
 
   // Reset the current image whenever a different project opens. Adjusting
   // state during render (rather than in an effect) avoids an extra
@@ -42,18 +78,53 @@ export default function ProjectGallery({
     setTrackedSlug(project?.slug);
     setIndex(0);
     setDirection(1);
+    resetZoom();
   }
 
   const go = useCallback(
     (dir: 1 | -1) => {
+      if (total < 2) return;
+      // Zoom is per-image state, never carried across navigation.
+      resetZoom();
       setDirection(dir);
-      setIndex((i) => {
-        if (total < 2) return i;
-        return (i + dir + total) % total;
+      setIndex((i) => (i + dir + total) % total);
+    },
+    [total, resetZoom]
+  );
+
+  const toggleZoom = useCallback(
+    (point: { x: number; y: number } | null) => {
+      setZoomed((wasZoomed) => {
+        if (!wasZoomed && point) {
+          const rect = imgRef.current?.getBoundingClientRect();
+          if (rect) setZoomOrigin(pointToOriginPercent(point, rect));
+        }
+        panX.set(0);
+        panY.set(0);
+        return !wasZoomed;
       });
     },
-    [total]
+    [panX, panY]
   );
+
+  // Bounds for panning a zoomed image, derived from its real "contain"
+  // fitted size against the stage — generic for any image's own aspect
+  // ratio, not a fixed/assumed shape. Only measured (via the DOM refs,
+  // which requires an effect) while actually zoomed; the unzoomed case is
+  // derived inline at the point of use instead of mirrored into state here.
+  useEffect(() => {
+    if (!zoomed) return;
+    const stage = stageRef.current?.getBoundingClientRect();
+    const nat = naturalSizeRef.current;
+    if (!stage || !nat || nat.w <= 0 || nat.h <= 0) return;
+
+    const fitScale = Math.min(stage.width / nat.w, stage.height / nat.h);
+    const scaledW = nat.w * fitScale * ZOOM_SCALE;
+    const scaledH = nat.h * fitScale * ZOOM_SCALE;
+    const maxX = Math.max(0, (scaledW - stage.width) / 2);
+    const maxY = Math.max(0, (scaledH - stage.height) / 2);
+    setPanConstraints({ left: -maxX, right: maxX, top: -maxY, bottom: maxY });
+  }, [zoomed, index]);
 
   // Scroll lock, keyboard navigation and focus trap while open.
   useEffect(() => {
@@ -104,11 +175,11 @@ export default function ProjectGallery({
     };
   }, [isOpen, onClose, go]);
 
-  const handleDragEnd = (
+  const handleSlideDragEnd = (
     _event: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo
   ) => {
-    if (total < 2) return;
+    if (zoomed || total < 2) return;
     if (
       info.offset.x < -SWIPE_OFFSET_THRESHOLD ||
       info.velocity.x < -SWIPE_VELOCITY_THRESHOLD
@@ -120,6 +191,13 @@ export default function ProjectGallery({
     ) {
       go(-1);
     }
+  };
+
+  const handleImageTap = (
+    _event: PointerEvent,
+    info: { point: { x: number; y: number } }
+  ) => {
+    toggleZoom(info.point);
   };
 
   const variants: Variants = reduced
@@ -145,6 +223,8 @@ export default function ProjectGallery({
   const transition = reduced
     ? { duration: 0.18, ease: "linear" as const }
     : { duration: 0.45, ease: EASE };
+
+  const zoomTransition = { duration: reduced ? 0.15 : 0.35, ease: EASE };
 
   return (
     <AnimatePresence>
@@ -187,7 +267,10 @@ export default function ProjectGallery({
               </button>
             )}
 
-            <div className="relative h-[70vh] w-full max-w-4xl md:h-[78vh]">
+            <div
+              ref={stageRef}
+              className="relative h-[70vh] w-full max-w-4xl md:h-[78vh]"
+            >
               <AnimatePresence initial={false} custom={direction}>
                 <motion.div
                   key={index}
@@ -197,18 +280,37 @@ export default function ProjectGallery({
                   animate="center"
                   exit="exit"
                   transition={transition}
-                  drag={total > 1 ? "x" : false}
+                  drag={!zoomed && total > 1 ? "x" : false}
                   dragConstraints={{ left: 0, right: 0 }}
                   dragElastic={0.2}
-                  onDragEnd={handleDragEnd}
+                  onDragEnd={handleSlideDragEnd}
                   className="absolute inset-0 flex items-center justify-center"
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <motion.img
+                    ref={imgRef}
                     src={images[index]}
                     alt={`${project.name} — beeld ${index + 1}`}
-                    className="max-h-full max-w-full select-none object-contain"
                     draggable={false}
+                    onLoad={(e) => {
+                      naturalSizeRef.current = {
+                        w: e.currentTarget.naturalWidth,
+                        h: e.currentTarget.naturalHeight,
+                      };
+                    }}
+                    onTap={handleImageTap}
+                    drag={zoomed}
+                    dragConstraints={panConstraints}
+                    dragElastic={0.05}
+                    animate={{ scale: zoomed ? ZOOM_SCALE : 1 }}
+                    transition={zoomTransition}
+                    style={{
+                      x: panX,
+                      y: panY,
+                      transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`,
+                      cursor: zoomed ? "zoom-out" : "zoom-in",
+                      touchAction: "none",
+                    }}
+                    className="max-h-full max-w-full select-none object-contain"
                   />
                 </motion.div>
               </AnimatePresence>
