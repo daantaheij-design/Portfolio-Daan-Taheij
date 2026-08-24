@@ -74,6 +74,21 @@ button {
   background-size: 160px 160px;
 }
 
+.text-image-mask {
+  background-repeat: no-repeat;
+  background-size: cover;
+  filter: grayscale(1) contrast(1.08);
+}
+
+@supports (background-clip: text) or (-webkit-background-clip: text) {
+  .text-image-mask {
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
 html.lenis,
 html.lenis body {
   height: auto;

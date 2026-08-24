@@ -6,6 +6,9 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import HorizontalMarquee from "./HorizontalMarquee";
 
+const HERO_PHOTO_URL = "/images/hero/daan-pf.webp";
+const HERO_PHOTO_MASK_Y = 38;
+
 function Chars({ text }: { text: string }) {
   return (
     <>
@@ -54,6 +57,37 @@ export default function Hero() {
   }, [reduced]);
 
   useLayoutEffect(() => {
+    const applyPhotoMask = () => {
+      const wrap = root.current?.querySelector<HTMLElement>(".hero-name-taheij");
+      const chars = wrap
+        ? Array.from(wrap.querySelectorAll<HTMLElement>(".hero-char"))
+        : [];
+      if (!wrap || chars.length === 0) return;
+
+      const first = chars[0];
+      const last = chars[chars.length - 1];
+      const startX = first.offsetLeft;
+      const totalWidth = last.offsetLeft + last.offsetWidth - startX;
+      if (totalWidth <= 0) return;
+
+      chars.forEach((el) => {
+        const offset = el.offsetLeft - startX;
+        el.style.backgroundImage = `url(${HERO_PHOTO_URL})`;
+        el.style.backgroundSize = `${totalWidth}px ${totalWidth}px`;
+        el.style.backgroundPositionX = `${-offset}px`;
+        el.style.backgroundPositionY = `${HERO_PHOTO_MASK_Y}%`;
+        el.classList.add("text-image-mask");
+      });
+    };
+
+    applyPhotoMask();
+    window.addEventListener("resize", applyPhotoMask);
+    document.fonts?.ready.then(applyPhotoMask).catch(() => {});
+
+    return () => window.removeEventListener("resize", applyPhotoMask);
+  }, []);
+
+  useLayoutEffect(() => {
     if (reduced) return;
 
     gsap.registerPlugin(ScrollTrigger);
@@ -76,6 +110,15 @@ export default function Hero() {
         .to(
           ".hero-name-taheij",
           { scale: 1.5, xPercent: 5, ease: "none", duration: 1 },
+          0
+        )
+        .to(
+          ".hero-name-taheij .hero-char",
+          {
+            backgroundPositionY: `${HERO_PHOTO_MASK_Y + 8}%`,
+            ease: "none",
+            duration: 1,
+          },
           0
         )
         .to(
