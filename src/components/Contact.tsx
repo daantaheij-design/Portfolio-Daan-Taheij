@@ -1,13 +1,62 @@
 "use client";
 
+import { useLayoutEffect, useRef } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { motion } from "motion/react";
 import { RevealLine } from "./Reveal";
 import { scrollToHash } from "@/lib/scroll";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 
 export default function Contact() {
+  const root = useRef<HTMLElement>(null);
+  const reduced = useReducedMotion();
+
+  useLayoutEffect(() => {
+    if (reduced) return;
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        ".contact-heading",
+        { scale: 0.8, autoAlpha: 0.25 },
+        {
+          scale: 1,
+          autoAlpha: 1,
+          ease: "none",
+          scrollTrigger: {
+            trigger: root.current,
+            start: "top 95%",
+            end: "top 35%",
+            scrub: 0.6,
+          },
+        }
+      );
+
+      gsap.fromTo(
+        ".contact-rule",
+        { scaleX: 0 },
+        {
+          scaleX: 1,
+          ease: "none",
+          scrollTrigger: {
+            trigger: root.current,
+            start: "top 85%",
+            end: "top 45%",
+            scrub: 0.6,
+          },
+        }
+      );
+    }, root);
+
+    return () => ctx.revert();
+  }, [reduced]);
+
   return (
     <section
       id="contact"
+      ref={root}
       className="invert-section relative flex min-h-svh flex-col justify-between px-6 pb-8 pt-24 md:px-10 md:pb-10 md:pt-28"
     >
       <span className="font-mono text-xs uppercase tracking-[0.14em] text-paper/55">
@@ -15,9 +64,11 @@ export default function Contact() {
       </span>
 
       <div className="flex flex-1 flex-col justify-center">
-        <h2 className="font-display font-semibold uppercase leading-[0.9] tracking-[-0.02em] text-[13vw] sm:text-[10vw] md:text-[8.5vw]">
-          <RevealLine>Let&apos;s make</RevealLine>
-          <RevealLine delay={0.08}>something good.</RevealLine>
+        <div className="contact-rule mb-8 h-px w-full origin-left bg-paper/15 md:mb-12" />
+
+        <h2 className="contact-heading font-display font-semibold uppercase leading-[0.9] tracking-[-0.02em] text-[16vw] will-change-transform sm:text-[12vw] md:text-[9.5vw]">
+          <RevealLine>Samen</RevealLine>
+          <RevealLine delay={0.08}>iets maken?</RevealLine>
         </h2>
 
         <motion.a
@@ -40,7 +91,7 @@ export default function Contact() {
       </div>
 
       <div className="flex flex-col gap-6 border-t border-paper/15 pt-6 font-mono text-[11px] uppercase tracking-[0.12em] text-paper/50 sm:flex-row sm:items-center sm:justify-between md:pt-8">
-        <span>© {new Date().getFullYear()} Daan Taheij — All rights reserved</span>
+        <span>© {new Date().getFullYear()} Daan Taheij — Alle rechten voorbehouden</span>
         <div className="flex gap-6">
           <a href="#" data-cursor="link" className="hover:text-paper">
             Instagram
@@ -61,7 +112,7 @@ export default function Contact() {
           }}
           className="hover:text-paper"
         >
-          Back to top ↑
+          Naar boven ↑
         </a>
       </div>
     </section>

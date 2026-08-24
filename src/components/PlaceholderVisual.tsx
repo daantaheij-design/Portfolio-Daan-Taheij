@@ -44,7 +44,7 @@ export default function PlaceholderVisual({
       onMouseMove={handleMove}
       onMouseLeave={handleLeave}
       data-cursor="view"
-      data-cursor-label="View"
+      data-cursor-label="Bekijk"
       className={`group relative aspect-[4/5] w-full overflow-hidden sm:aspect-[16/10] ${
         isInk ? "bg-ink" : "bg-paper-dim"
       }`}

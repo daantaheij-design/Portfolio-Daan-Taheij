@@ -7,11 +7,14 @@ declare global {
 }
 
 export function scrollToHash(hash: string) {
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const behavior: ScrollBehavior = reduced ? "auto" : "smooth";
+
   if (hash === "#top") {
     if (window.__lenis) {
-      window.__lenis.scrollTo(0, { duration: 1.4 });
+      window.__lenis.scrollTo(0, { duration: reduced ? 0 : 1.4 });
     } else {
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo({ top: 0, behavior });
     }
     return;
   }
@@ -20,8 +23,8 @@ export function scrollToHash(hash: string) {
   if (!el) return;
 
   if (window.__lenis) {
-    window.__lenis.scrollTo(el, { duration: 1.4, offset: -20 });
+    window.__lenis.scrollTo(el, { duration: reduced ? 0 : 1.4, offset: -20 });
   } else {
-    el.scrollIntoView({ behavior: "smooth" });
+    el.scrollIntoView({ behavior });
   }
 }

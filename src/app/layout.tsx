@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque, Instrument_Sans, IBM_Plex_Mono } from "next/font/google";
+import { MotionConfig } from "motion/react";
 import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
 import Cursor from "@/components/Cursor";
@@ -24,9 +25,9 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Daan Taheij — Graphic & Creative Designer",
+  title: "Daan Taheij — Grafisch Vormgever",
   description:
-    "Portfolio of Daan Taheij, graphic and creative designer working across brand, editorial and digital.",
+    "Portfolio van Daan Taheij, grafisch vormgever bij UP International. Werkt op het snijvlak van vormgeving, technologie en AI.",
 };
 
 export default function RootLayout({
@@ -36,15 +37,17 @@ export default function RootLayout({
 }) {
   return (
     <html
-      lang="en"
+      lang="nl"
       className={`${display.variable} ${sans.variable} ${mono.variable}`}
     >
       <body className="bg-paper text-ink font-sans antialiased">
-        <SmoothScroll>
-          <Cursor />
-          <Navbar />
-          {children}
-        </SmoothScroll>
+        <MotionConfig reducedMotion="user">
+          <SmoothScroll>
+            <Cursor />
+            <Navbar />
+            {children}
+          </SmoothScroll>
+        </MotionConfig>
       </body>
     </html>
   );

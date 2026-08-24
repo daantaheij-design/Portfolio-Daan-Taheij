@@ -5,8 +5,8 @@ import { AnimatePresence, motion } from "motion/react";
 import { scrollToHash } from "@/lib/scroll";
 
 const links = [
-  { label: "Work", href: "#work" },
-  { label: "About", href: "#about" },
+  { label: "Werk", href: "#work" },
+  { label: "Over mij", href: "#about" },
   { label: "Contact", href: "#contact" },
 ];
 
@@ -58,7 +58,7 @@ export default function Navbar() {
               data-cursor="link"
               className="font-mono text-xs uppercase tracking-[0.12em] underline underline-offset-4"
             >
-              Say Hello
+              Zeg Hallo
             </a>
           </nav>
 
@@ -67,7 +67,7 @@ export default function Navbar() {
             data-cursor="link"
             onClick={() => setOpen((v) => !v)}
             className="relative z-50 flex h-8 w-9 flex-col items-end justify-center gap-[7px] md:hidden"
-            aria-label="Toggle menu"
+            aria-label="Menu openen of sluiten"
           >
             <span
               className={`h-px w-full bg-paper transition-transform duration-300 ${

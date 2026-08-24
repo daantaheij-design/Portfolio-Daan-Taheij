@@ -3,8 +3,10 @@
 import { useLayoutEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { motion, useMotionValue, useSpring } from "motion/react";
 import PlaceholderVisual from "./PlaceholderVisual";
 import { RevealLine } from "./Reveal";
+import { useReducedMotion } from "@/lib/useReducedMotion";
 import type { Project } from "@/data/projects";
 
 export default function ProjectRow({
@@ -15,17 +17,42 @@ export default function ProjectRow({
   index: number;
 }) {
   const root = useRef<HTMLDivElement>(null);
+  const magnetic = useRef<HTMLDivElement>(null);
+  const reduced = useReducedMotion();
+
   const offset = index % 2 === 1;
+  const overlay = index % 2 === 1;
+
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const smx = useSpring(mx, { stiffness: 200, damping: 20, mass: 0.4 });
+  const smy = useSpring(my, { stiffness: 200, damping: 20, mass: 0.4 });
+
+  const handleMagneticMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = magnetic.current?.getBoundingClientRect();
+    if (!rect) return;
+    const relX = (e.clientX - (rect.left + rect.width / 2)) / rect.width;
+    const relY = (e.clientY - (rect.top + rect.height / 2)) / rect.height;
+    mx.set(relX * 24);
+    my.set(relY * 16);
+  };
+
+  const handleMagneticLeave = () => {
+    mx.set(0);
+    my.set(0);
+  };
 
   useLayoutEffect(() => {
+    if (reduced) return;
+
     const ctx = gsap.context(() => {
       gsap.registerPlugin(ScrollTrigger);
 
       gsap.fromTo(
         ".project-visual-inner",
-        { scale: 1.22 },
+        { scale: 1 },
         {
-          scale: 1,
+          scale: 1.1,
           ease: "none",
           scrollTrigger: {
             trigger: root.current,
@@ -50,39 +77,98 @@ export default function ProjectRow({
           },
         }
       );
+
+      gsap.fromTo(
+        ".proj-number",
+        { y: 90 },
+        {
+          y: -90,
+          ease: "none",
+          scrollTrigger: {
+            trigger: root.current,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: 0.6,
+          },
+        }
+      );
     }, root);
 
     return () => ctx.revert();
-  }, []);
+  }, [reduced]);
 
   return (
     <div
       ref={root}
-      className="border-t border-ink/12 py-10 first:border-t-0 md:py-16"
+      className="relative border-t border-ink/12 py-10 first:border-t-0 md:py-16"
     >
-      <div className="mb-6 flex items-baseline justify-between gap-4 md:mb-10">
-        <div className="flex items-baseline gap-4 md:gap-6">
-          <span className="font-mono text-xs text-muted md:text-sm">
-            {project.number}
+      {!overlay && (
+        <motion.div
+          ref={magnetic}
+          onMouseMove={handleMagneticMove}
+          onMouseLeave={handleMagneticLeave}
+          style={{ x: smx, y: smy }}
+          className="relative mb-6 flex items-baseline justify-between gap-4 md:mb-10"
+        >
+          <div className="relative flex items-baseline gap-4 md:gap-6">
+            <span
+              aria-hidden
+              className="proj-number pointer-events-none absolute -left-2 -top-6 select-none font-display text-[20vw] font-semibold leading-none text-ink/[0.05] will-change-transform sm:text-[12vw] md:-top-10"
+            >
+              {project.number}
+            </span>
+            <span className="relative font-mono text-xs text-muted md:text-sm">
+              {project.number}
+            </span>
+            <h3 className="font-display relative overflow-hidden text-3xl font-semibold uppercase leading-[0.95] tracking-tight sm:text-5xl md:text-7xl">
+              <RevealLine>{project.name}</RevealLine>
+            </h3>
+          </div>
+          <span className="relative hidden shrink-0 font-mono text-xs text-muted md:block">
+            {project.year}
           </span>
-          <h3 className="font-display overflow-hidden text-3xl font-semibold uppercase leading-[0.95] tracking-tight sm:text-5xl md:text-7xl">
-            <RevealLine>{project.name}</RevealLine>
-          </h3>
-        </div>
-        <span className="hidden shrink-0 font-mono text-xs text-muted md:block">
-          {project.year}
-        </span>
-      </div>
+        </motion.div>
+      )}
 
       <div
-        className={`${offset ? "md:ml-[12%]" : "md:mr-[12%]"} overflow-hidden`}
+        className={`relative ${offset ? "md:ml-[12%]" : "md:mr-[12%]"}`}
       >
-        <div className="project-visual-inner">
-          <PlaceholderVisual
-            index={project.number}
-            tone={index === 1 ? "ink" : "paper"}
-            label={project.category}
-          />
+        {overlay && (
+          <span
+            aria-hidden
+            className="proj-number pointer-events-none absolute -top-10 right-4 z-10 select-none font-display text-[22vw] font-semibold leading-none text-ink/15 will-change-transform sm:text-[13vw] md:-top-16 md:right-8"
+          >
+            {project.number}
+          </span>
+        )}
+
+        <div className="relative overflow-hidden">
+          <div className="project-visual-inner">
+            <PlaceholderVisual
+              index={project.number}
+              tone={overlay ? "ink" : "paper"}
+              label={project.category}
+            />
+          </div>
+
+          {overlay && (
+            <motion.div
+              ref={magnetic}
+              onMouseMove={handleMagneticMove}
+              onMouseLeave={handleMagneticLeave}
+              style={{ x: smx, y: smy }}
+              className="absolute bottom-6 left-4 z-10 sm:bottom-10 sm:left-8"
+            >
+              <div className="flex items-baseline gap-3 md:gap-4">
+                <span className="font-mono text-xs text-paper/70 md:text-sm">
+                  {project.number}
+                </span>
+                <h3 className="font-display overflow-hidden text-3xl font-semibold uppercase leading-[0.95] tracking-tight text-paper drop-shadow-sm sm:text-5xl md:text-7xl">
+                  <RevealLine>{project.name}</RevealLine>
+                </h3>
+              </div>
+            </motion.div>
+          )}
         </div>
       </div>
 
