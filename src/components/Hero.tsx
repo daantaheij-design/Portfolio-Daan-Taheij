@@ -307,11 +307,6 @@ export default function Hero() {
           0
         )
         .to(
-          ".hero-sub-fade",
-          { autoAlpha: 0, y: -30, ease: "none", duration: 0.6 },
-          0
-        )
-        .to(
           ".hero-ticker",
           { autoAlpha: 0, ease: "none", duration: 0.5 },
           0.3
@@ -349,11 +344,6 @@ export default function Hero() {
             </span>
           </h1>
 
-          <div className="hero-fade hero-sub-fade mt-6 max-w-xl font-mono text-xs uppercase leading-relaxed tracking-[0.14em] text-paper/70 sm:text-sm md:mt-8">
-            Grafisch vormgever bij UP International — ik ontwikkel merken,
-            redactionele systemen en digitale vormgeving, van concept tot
-            in detail uitgewerkt.
-          </div>
         </div>
 
         <div className="hero-fade hero-ticker -mx-6 border-y border-paper/15 py-3 md:-mx-10">
@@ -364,15 +354,7 @@ export default function Hero() {
           />
         </div>
 
-        <div className="flex items-end justify-between pt-6">
-          <div className="hero-fade flex items-center gap-3 font-mono text-[11px] uppercase tracking-[0.14em] text-paper/55">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-paper/60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-paper" />
-            </span>
-            Open voor freelance &amp; samenwerkingen — 2026
-          </div>
-
+        <div className="flex items-end justify-end pt-6">
           <div className="hero-badge relative hidden h-24 w-24 shrink-0 items-center justify-center sm:flex md:h-28 md:w-28">
             <div className="animate-spin-slow absolute inset-0">
               <svg viewBox="0 0 100 100" className="h-full w-full">

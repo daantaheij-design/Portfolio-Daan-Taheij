@@ -96,7 +96,13 @@ export default function Contact() {
           <a href="#" data-cursor="link" className="hover:text-paper">
             Instagram
           </a>
-          <a href="#" data-cursor="link" className="hover:text-paper">
+          <a
+            href="https://www.linkedin.com/in/daan-taheij-2512b3179/"
+            target="_blank"
+            rel="noopener noreferrer"
+            data-cursor="link"
+            className="hover:text-paper"
+          >
             LinkedIn
           </a>
           <a href="#" data-cursor="link" className="hover:text-paper">

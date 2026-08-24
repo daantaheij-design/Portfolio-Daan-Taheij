@@ -24,8 +24,11 @@ export default function ProjectRow({
   const magnetic = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
 
+  // Purely cosmetic alternation (image indent + placeholder tone) so the
+  // list doesn't feel repetitive — the project header itself always sits
+  // at the top of the section, consistently, for every project.
   const offset = index % 2 === 1;
-  const overlay = index % 2 === 1;
+  const tone = index % 2 === 1 ? "ink" : "paper";
 
   const hasGallery = Boolean(
     (project.images && project.images.length > 0) || project.coverImage
@@ -110,91 +113,52 @@ export default function ProjectRow({
       ref={root}
       className="relative border-t border-ink/12 py-10 first:border-t-0 md:py-16"
     >
-      {!overlay && (
-        <motion.div
-          ref={magnetic}
-          onMouseMove={handleMagneticMove}
-          onMouseLeave={handleMagneticLeave}
-          style={{ x: smx, y: smy }}
-          className="relative mb-6 flex items-baseline justify-between gap-4 md:mb-10"
-        >
-          <div className="relative flex items-baseline gap-4 md:gap-6">
-            <span
-              aria-hidden
-              className="proj-number pointer-events-none absolute -left-2 -top-6 select-none font-display text-[20vw] font-semibold leading-none text-ink/[0.05] will-change-transform sm:text-[12vw] md:-top-10"
-            >
-              {project.number}
-            </span>
-            <span className="relative font-mono text-xs text-muted md:text-sm">
-              {project.number}
-            </span>
-            <div className="relative">
-              <h3 className="font-display overflow-hidden text-3xl font-semibold uppercase leading-[0.95] tracking-tight sm:text-5xl md:text-7xl">
-                <RevealLine>{project.name}</RevealLine>
-              </h3>
-              {project.context && (
-                <span className="mt-1 block font-mono text-xs uppercase tracking-[0.1em] text-muted md:text-sm">
-                  {project.context}
-                </span>
-              )}
-            </div>
-          </div>
-          <span className="relative hidden shrink-0 font-mono text-xs text-muted md:block">
-            {project.year}
-          </span>
-        </motion.div>
-      )}
-
-      <div
-        className={`relative ${offset ? "md:ml-[12%]" : "md:mr-[12%]"}`}
+      <motion.div
+        ref={magnetic}
+        onMouseMove={handleMagneticMove}
+        onMouseLeave={handleMagneticLeave}
+        style={{ x: smx, y: smy }}
+        className="relative mb-6 flex items-baseline justify-between gap-4 md:mb-10"
       >
-        {overlay && (
+        <div className="relative flex items-baseline gap-4 md:gap-6">
           <span
             aria-hidden
-            className="proj-number pointer-events-none absolute -top-10 right-4 z-10 select-none font-display text-[22vw] font-semibold leading-none text-ink/15 will-change-transform sm:text-[13vw] md:-top-16 md:right-8"
+            className="proj-number pointer-events-none absolute -left-2 -top-6 select-none font-display text-[20vw] font-semibold leading-none text-ink/[0.05] will-change-transform sm:text-[12vw] md:-top-10"
           >
             {project.number}
           </span>
-        )}
+          <span className="relative font-mono text-xs text-muted md:text-sm">
+            {project.number}
+          </span>
+          <div className="relative">
+            <h3 className="font-display overflow-hidden text-3xl font-semibold uppercase leading-[0.95] tracking-tight sm:text-5xl md:text-7xl">
+              <RevealLine>{project.name}</RevealLine>
+            </h3>
+            {project.context && (
+              <span className="mt-1 block font-mono text-xs uppercase tracking-[0.1em] text-muted md:text-sm">
+                {project.context}
+              </span>
+            )}
+          </div>
+        </div>
+        <span className="relative hidden shrink-0 font-mono text-xs text-muted md:block">
+          {project.year}
+        </span>
+      </motion.div>
 
+      <div className={`relative ${offset ? "md:ml-[12%]" : "md:mr-[12%]"}`}>
         <div className="relative overflow-hidden">
           <div className="project-visual-inner">
             <PlaceholderVisual
               index={project.number}
               total={total}
-              tone={overlay ? "ink" : "paper"}
+              tone={tone}
               label={project.category}
               image={project.coverImage}
               interactive={hasGallery}
               onOpen={hasGallery ? () => onOpenGallery(project) : undefined}
             />
           </div>
-
-          {overlay && (
-            <motion.div
-              ref={magnetic}
-              onMouseMove={handleMagneticMove}
-              onMouseLeave={handleMagneticLeave}
-              style={{ x: smx, y: smy }}
-              className="absolute bottom-6 left-4 z-10 sm:bottom-10 sm:left-8"
-            >
-              <div className="flex items-baseline gap-3 md:gap-4">
-                <span className="font-mono text-xs text-paper/70 md:text-sm">
-                  {project.number}
-                </span>
-                <div>
-                  <h3 className="font-display overflow-hidden text-3xl font-semibold uppercase leading-[0.95] tracking-tight text-paper drop-shadow-sm sm:text-5xl md:text-7xl">
-                    <RevealLine>{project.name}</RevealLine>
-                  </h3>
-                  {project.context && (
-                    <span className="mt-1 block font-mono text-xs uppercase tracking-[0.1em] text-paper/70 drop-shadow-sm md:text-sm">
-                      {project.context}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          )}
         </div>
       </div>
 
