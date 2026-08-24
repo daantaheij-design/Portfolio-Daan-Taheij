@@ -5,9 +5,18 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { motion, useMotionValue, useSpring } from "motion/react";
 import PlaceholderVisual from "./PlaceholderVisual";
-import { RevealLine } from "./Reveal";
+import { RevealLine, ScaleReveal } from "./Reveal";
 import { useReducedMotion } from "@/lib/useReducedMotion";
 import type { Project } from "@/data/projects";
+
+function ProjectGalleryImage({ src }: { src: string }) {
+  return (
+    <div className="project-visual-inner h-full w-full">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src} alt="" className="h-full w-full object-cover" loading="lazy" />
+    </div>
+  );
+}
 
 export default function ProjectRow({
   project,
@@ -151,6 +160,7 @@ export default function ProjectRow({
               total={total}
               tone={overlay ? "ink" : "paper"}
               label={project.category}
+              image={project.image}
             />
           </div>
 
@@ -173,6 +183,31 @@ export default function ProjectRow({
             </motion.div>
           )}
         </div>
+
+        {project.gallery && (
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4 md:mt-6 md:gap-5">
+            <ScaleReveal className="col-span-1 row-span-2">
+              <div className="relative aspect-[3/4] w-full overflow-hidden bg-paper-dim">
+                <ProjectGalleryImage src={project.gallery[0]} />
+              </div>
+            </ScaleReveal>
+            <ScaleReveal delay={0.06}>
+              <div className="relative aspect-square w-full overflow-hidden bg-paper-dim">
+                <ProjectGalleryImage src={project.gallery[1]} />
+              </div>
+            </ScaleReveal>
+            <ScaleReveal delay={0.12}>
+              <div className="relative aspect-square w-full overflow-hidden bg-paper-dim">
+                <ProjectGalleryImage src={project.gallery[2]} />
+              </div>
+            </ScaleReveal>
+            <ScaleReveal delay={0.18} className="col-span-2">
+              <div className="relative aspect-[21/9] w-full overflow-hidden bg-paper-dim">
+                <ProjectGalleryImage src={project.gallery[3]} />
+              </div>
+            </ScaleReveal>
+          </div>
+        )}
       </div>
 
       <div className="mt-4 flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.12em] text-muted md:mt-6">

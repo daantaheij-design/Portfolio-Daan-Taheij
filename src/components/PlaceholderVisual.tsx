@@ -10,11 +10,13 @@ export default function PlaceholderVisual({
   total,
   tone = "paper",
   label,
+  image,
 }: {
   index: string;
   total: number;
   tone?: "paper" | "ink";
   label: string;
+  image?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const mx = useMotionValue(0.5);
@@ -51,29 +53,46 @@ export default function PlaceholderVisual({
         isInk ? "bg-ink" : "bg-paper-dim"
       }`}
     >
-      <div
-        className={`noise-layer absolute inset-0 ${
-          isInk ? "opacity-[0.05] invert" : "opacity-[0.06]"
-        }`}
-      />
-
-      <motion.div
-        style={{ x: translateX, y: translateY, rotate }}
-        className="pointer-events-none absolute inset-[-8%] flex items-center justify-center transition-[scale] duration-500 ease-out group-hover:scale-[1.03]"
-      >
-        <span
-          className={`font-display select-none text-[26vw] font-semibold leading-none sm:text-[13vw] ${
-            isInk ? "text-paper/[0.07]" : "text-ink/[0.07]"
-          }`}
+      {image ? (
+        <motion.div
+          style={{ x: translateX, y: translateY, rotate }}
+          className="pointer-events-none absolute inset-[-6%] transition-[scale] duration-500 ease-out group-hover:scale-[1.03]"
         >
-          {index}
-        </span>
-      </motion.div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={image}
+            alt=""
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+        </motion.div>
+      ) : (
+        <>
+          <div
+            className={`noise-layer absolute inset-0 ${
+              isInk ? "opacity-[0.05] invert" : "opacity-[0.06]"
+            }`}
+          />
+
+          <motion.div
+            style={{ x: translateX, y: translateY, rotate }}
+            className="pointer-events-none absolute inset-[-8%] flex items-center justify-center transition-[scale] duration-500 ease-out group-hover:scale-[1.03]"
+          >
+            <span
+              className={`font-display select-none text-[26vw] font-semibold leading-none sm:text-[13vw] ${
+                isInk ? "text-paper/[0.07]" : "text-ink/[0.07]"
+              }`}
+            >
+              {index}
+            </span>
+          </motion.div>
+        </>
+      )}
 
       <div
         className={`absolute inset-6 flex items-end justify-between font-mono text-[10px] uppercase tracking-[0.14em] sm:inset-8 ${
           isInk ? "text-paper/50" : "text-ink/45"
-        }`}
+        } ${image ? "drop-shadow-[0_1px_6px_rgba(0,0,0,0.55)]" : ""}`}
       >
         <span>{label}</span>
         <span>
@@ -83,22 +102,22 @@ export default function PlaceholderVisual({
 
       <span
         className={`${CROP} left-4 top-4 border-l border-t sm:left-6 sm:top-6 ${
-          isInk ? "border-paper/40" : ""
+          isInk || image ? "border-paper/40" : ""
         }`}
       />
       <span
         className={`${CROP} right-4 top-4 border-r border-t sm:right-6 sm:top-6 ${
-          isInk ? "border-paper/40" : ""
+          isInk || image ? "border-paper/40" : ""
         }`}
       />
       <span
         className={`${CROP} bottom-4 left-4 border-b border-l sm:bottom-6 sm:left-6 ${
-          isInk ? "border-paper/40" : ""
+          isInk || image ? "border-paper/40" : ""
         }`}
       />
       <span
         className={`${CROP} bottom-4 right-4 border-b border-r sm:bottom-6 sm:right-6 ${
-          isInk ? "border-paper/40" : ""
+          isInk || image ? "border-paper/40" : ""
         }`}
       />
 

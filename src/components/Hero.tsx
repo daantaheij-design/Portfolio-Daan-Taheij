@@ -7,11 +7,12 @@ import { useReducedMotion } from "@/lib/useReducedMotion";
 import HorizontalMarquee from "./HorizontalMarquee";
 
 const HERO_PHOTO_URL = "/images/hero/daan-pf.webp";
-// Vertical anchor (0-1) into the combined DAAN+TAHEIJ box used to crop the
-// (square) portrait — keeps the face roughly centred across both lines.
-const HERO_PHOTO_MASK_Y = 0.32;
 // Paper color the photo fades out to (matches --color-paper in globals.css).
 const HERO_PHOTO_FADE_RGB = "244, 241, 234";
+// Index of the character TAHEIJ's portrait window is centred on the seam
+// after (0-based: T=0, A=1, H=2, E=3, I=4, J=5) — the A/H seam gives the
+// widest, most natural pair of letters to frame a full head in.
+const HERO_PHOTO_ANCHOR_INDEX = 1;
 
 function Chars({ text }: { text: string }) {
   return (
@@ -62,19 +63,18 @@ export default function Hero() {
 
   useLayoutEffect(() => {
     const applyPhotoMask = () => {
-      const nameEl = root.current?.querySelector<HTMLElement>(".hero-name");
-      const chars = nameEl
-        ? Array.from(nameEl.querySelectorAll<HTMLElement>(".hero-char"))
+      const wrap = root.current?.querySelector<HTMLElement>(".hero-name-taheij");
+      const chars = wrap
+        ? Array.from(wrap.querySelectorAll<HTMLElement>(".hero-char"))
         : [];
-      if (!nameEl || chars.length === 0) return;
+      // DAAN is intentionally left untouched (no mask) — only TAHEIJ's
+      // characters get styled below.
+      if (!wrap || chars.length < 3) return;
 
-      // Treat DAAN + TAHEIJ as one shared coordinate space so the photo
-      // reads as a single continuous image flowing from one word into
-      // the other, instead of two separately-cropped words. Each line
-      // wrapper has `will-change: transform`, which gives it its own
+      // Line wrapper has `will-change: transform`, which gives it its own
       // containing block — offsetTop/offsetLeft on the chars inside would
-      // resolve per-line instead of against a shared ancestor, so we use
-      // getBoundingClientRect() (always viewport-relative) instead.
+      // resolve per-element instead of against a shared ancestor, so we
+      // use getBoundingClientRect() (always viewport-relative) instead.
       const rects = chars.map((el) => el.getBoundingClientRect());
       const minX = Math.min(...rects.map((r) => r.left));
       const maxX = Math.max(...rects.map((r) => r.right));
@@ -84,18 +84,33 @@ export default function Hero() {
       const boxHeight = maxY - minY;
       if (boxWidth <= 0 || boxHeight <= 0) return;
 
-      // Source photo is square — scale it to "cover" the combined box.
-      const photoSize = Math.max(boxWidth, boxHeight);
-      const biasX = (photoSize - boxWidth) / 2;
-      const biasY = (photoSize - boxHeight) * HERO_PHOTO_MASK_Y;
+      // Show the full (square) portrait undistorted, sized off the line's
+      // own height — no vertical crop, no stretch. At this natural size it
+      // lands on roughly one to two letters, anchored at the A/H seam so a
+      // full head reads clearly there. On narrow viewports the line height
+      // (and so the portrait) is much smaller in absolute pixels, so we
+      // scale it up a little there to keep the face legible — still well
+      // within "one to three letters".
+      const mobileBoost = window.innerWidth < 640 ? 1.3 : window.innerWidth < 1024 ? 1.15 : 1;
+      const anchor = Math.min(HERO_PHOTO_ANCHOR_INDEX, chars.length - 2);
+      const anchorCenterX =
+        (rects[anchor].right + rects[anchor + 1].left) / 2 - minX;
+      const photoSize = boxHeight * mobileBoost;
+      const photoLeft = anchorCenterX - photoSize / 2;
 
-      // Vertical wash that keeps the photo strongest through DAAN and
-      // fades it smoothly (no hard seam) into solid, readable paper-white
-      // by the end of TAHEIJ.
+      // Radial paper-wash: stays fully clear over the photo itself, then
+      // fades to solid, readable paper-white in both directions so the far
+      // letters (I, J and — on shorter crops — T) read as plain typography.
+      // The inner radius must sit at/just inside the photo's own half-width
+      // (photoSize / 2) — any gap between where the photo stops and where
+      // the wash starts opacifying leaves a "dead zone" where neither layer
+      // paints anything, showing raw (black) background through the text.
+      const innerR = photoSize * 0.48;
+      const outerR = photoSize * 1.05;
       const fade = [
         `rgba(${HERO_PHOTO_FADE_RGB}, 0) 0%`,
-        `rgba(${HERO_PHOTO_FADE_RGB}, 0) 50%`,
-        `rgba(${HERO_PHOTO_FADE_RGB}, 0.85) 100%`,
+        `rgba(${HERO_PHOTO_FADE_RGB}, 0) ${((innerR / outerR) * 100).toFixed(1)}%`,
+        `rgba(${HERO_PHOTO_FADE_RGB}, 0.96) 100%`,
       ].join(", ");
 
       chars.forEach((el, i) => {
@@ -103,7 +118,7 @@ export default function Hero() {
         const localY = rects[i].top - minY;
 
         el.style.backgroundImage = [
-          `linear-gradient(to bottom, ${fade})`,
+          `radial-gradient(ellipse ${outerR}px ${outerR * 2.5}px at ${anchorCenterX}px ${boxHeight / 2}px, ${fade})`,
           `url(${HERO_PHOTO_URL})`,
         ].join(", ");
         el.style.backgroundSize = [
@@ -112,7 +127,7 @@ export default function Hero() {
         ].join(", ");
         el.style.backgroundPosition = [
           `${-localX}px ${-localY}px`,
-          `${-(biasX + localX)}px ${-(biasY + localY)}px`,
+          `${photoLeft - localX}px ${-localY}px`,
         ].join(", ");
         el.classList.add("text-image-mask");
       });
