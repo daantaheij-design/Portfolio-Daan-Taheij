@@ -93,9 +93,6 @@ export default function Contact() {
       <div className="flex flex-col gap-6 border-t border-paper/15 pt-6 font-mono text-[11px] uppercase tracking-[0.12em] text-paper/50 sm:flex-row sm:items-center sm:justify-between md:pt-8">
         <span>© {new Date().getFullYear()} Daan Taheij — Alle rechten voorbehouden</span>
         <div className="flex gap-6">
-          <a href="#" data-cursor="link" className="hover:text-paper">
-            Instagram
-          </a>
           <a
             href="https://www.linkedin.com/in/daan-taheij-2512b3179/"
             target="_blank"
@@ -104,9 +101,6 @@ export default function Contact() {
             className="hover:text-paper"
           >
             LinkedIn
-          </a>
-          <a href="#" data-cursor="link" className="hover:text-paper">
-            Behance
           </a>
         </div>
         <a
