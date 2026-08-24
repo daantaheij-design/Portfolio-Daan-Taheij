@@ -18,12 +18,11 @@ export default function AboutPreview() {
 
         <div className="grid grid-cols-1 gap-10 md:grid-cols-12 md:gap-8">
           <h2 className="font-display col-span-9 text-3xl font-medium uppercase leading-[1.05] tracking-tight sm:text-5xl md:text-6xl lg:text-7xl">
-            <RevealLine>Ik ben Daan Taheij, grafisch</RevealLine>
-            <RevealLine delay={0.06}>vormgever bij UP International.</RevealLine>
+            <RevealLine>Mijn naam is Daan Taheij</RevealLine>
+            <RevealLine delay={0.06}>en ik ben</RevealLine>
             <RevealLine delay={0.12}>
-              Ik ontwerp <span className="text-muted">merken,</span>
+              <span className="text-muted">grafisch vormgever</span>
             </RevealLine>
-            <RevealLine delay={0.18}>concepten en digitale vormgeving.</RevealLine>
           </h2>
 
           <div className="col-span-3 flex flex-col justify-end">

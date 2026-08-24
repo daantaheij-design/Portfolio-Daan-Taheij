@@ -7,7 +7,11 @@ import { useReducedMotion } from "@/lib/useReducedMotion";
 import HorizontalMarquee from "./HorizontalMarquee";
 
 const HERO_PHOTO_URL = "/images/hero/daan-pf.webp";
-const HERO_PHOTO_MASK_Y = 38;
+// Vertical anchor (0-1) into the combined DAAN+TAHEIJ box used to crop the
+// (square) portrait — keeps the face roughly centred across both lines.
+const HERO_PHOTO_MASK_Y = 0.32;
+// Paper color the photo fades out to (matches --color-paper in globals.css).
+const HERO_PHOTO_FADE_RGB = "244, 241, 234";
 
 function Chars({ text }: { text: string }) {
   return (
@@ -58,24 +62,58 @@ export default function Hero() {
 
   useLayoutEffect(() => {
     const applyPhotoMask = () => {
-      const wrap = root.current?.querySelector<HTMLElement>(".hero-name-taheij");
-      const chars = wrap
-        ? Array.from(wrap.querySelectorAll<HTMLElement>(".hero-char"))
+      const nameEl = root.current?.querySelector<HTMLElement>(".hero-name");
+      const chars = nameEl
+        ? Array.from(nameEl.querySelectorAll<HTMLElement>(".hero-char"))
         : [];
-      if (!wrap || chars.length === 0) return;
+      if (!nameEl || chars.length === 0) return;
 
-      const first = chars[0];
-      const last = chars[chars.length - 1];
-      const startX = first.offsetLeft;
-      const totalWidth = last.offsetLeft + last.offsetWidth - startX;
-      if (totalWidth <= 0) return;
+      // Treat DAAN + TAHEIJ as one shared coordinate space so the photo
+      // reads as a single continuous image flowing from one word into
+      // the other, instead of two separately-cropped words. Each line
+      // wrapper has `will-change: transform`, which gives it its own
+      // containing block — offsetTop/offsetLeft on the chars inside would
+      // resolve per-line instead of against a shared ancestor, so we use
+      // getBoundingClientRect() (always viewport-relative) instead.
+      const rects = chars.map((el) => el.getBoundingClientRect());
+      const minX = Math.min(...rects.map((r) => r.left));
+      const maxX = Math.max(...rects.map((r) => r.right));
+      const minY = Math.min(...rects.map((r) => r.top));
+      const maxY = Math.max(...rects.map((r) => r.bottom));
+      const boxWidth = maxX - minX;
+      const boxHeight = maxY - minY;
+      if (boxWidth <= 0 || boxHeight <= 0) return;
 
-      chars.forEach((el) => {
-        const offset = el.offsetLeft - startX;
-        el.style.backgroundImage = `url(${HERO_PHOTO_URL})`;
-        el.style.backgroundSize = `${totalWidth}px ${totalWidth}px`;
-        el.style.backgroundPositionX = `${-offset}px`;
-        el.style.backgroundPositionY = `${HERO_PHOTO_MASK_Y}%`;
+      // Source photo is square — scale it to "cover" the combined box.
+      const photoSize = Math.max(boxWidth, boxHeight);
+      const biasX = (photoSize - boxWidth) / 2;
+      const biasY = (photoSize - boxHeight) * HERO_PHOTO_MASK_Y;
+
+      // Vertical wash that keeps the photo strongest through DAAN and
+      // fades it smoothly (no hard seam) into solid, readable paper-white
+      // by the end of TAHEIJ.
+      const fade = [
+        `rgba(${HERO_PHOTO_FADE_RGB}, 0) 0%`,
+        `rgba(${HERO_PHOTO_FADE_RGB}, 0) 50%`,
+        `rgba(${HERO_PHOTO_FADE_RGB}, 0.85) 100%`,
+      ].join(", ");
+
+      chars.forEach((el, i) => {
+        const localX = rects[i].left - minX;
+        const localY = rects[i].top - minY;
+
+        el.style.backgroundImage = [
+          `linear-gradient(to bottom, ${fade})`,
+          `url(${HERO_PHOTO_URL})`,
+        ].join(", ");
+        el.style.backgroundSize = [
+          `${boxWidth}px ${boxHeight}px`,
+          `${photoSize}px ${photoSize}px`,
+        ].join(", ");
+        el.style.backgroundPosition = [
+          `${-localX}px ${-localY}px`,
+          `${-(biasX + localX)}px ${-(biasY + localY)}px`,
+        ].join(", ");
         el.classList.add("text-image-mask");
       });
     };
@@ -113,15 +151,6 @@ export default function Hero() {
           0
         )
         .to(
-          ".hero-name-taheij .hero-char",
-          {
-            backgroundPositionY: `${HERO_PHOTO_MASK_Y + 8}%`,
-            ease: "none",
-            duration: 1,
-          },
-          0
-        )
-        .to(
           ".hero-sub-fade",
           { autoAlpha: 0, y: -30, ease: "none", duration: 0.6 },
           0
@@ -155,7 +184,7 @@ export default function Hero() {
         </div>
 
         <div className="flex flex-1 flex-col justify-center">
-          <h1 className="font-display font-semibold uppercase leading-[0.86] tracking-[-0.02em] text-[19vw] sm:text-[16vw] md:text-[15vw] lg:text-[13.5vw]">
+          <h1 className="hero-name font-display font-semibold uppercase leading-[0.86] tracking-[-0.02em] text-[19vw] sm:text-[16vw] md:text-[15vw] lg:text-[13.5vw]">
             <span className="hero-name-daan block origin-left will-change-transform">
               <Chars text="Daan" />
             </span>
