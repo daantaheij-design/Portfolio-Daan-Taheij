@@ -43,6 +43,13 @@ export const projects: Project[] = [
     context: "Stoov",
     category: "Branding / Redactioneel / Print",
     year: "2023",
+    coverImage: "/images/hero/red-dot-1.webp",
+    images: [
+      "/images/hero/red-dot-1.webp",
+      "/images/hero/red-dot-2.webp",
+      "/images/hero/red-dot-3.webp",
+      "/images/hero/red-dot-4.webp",
+    ],
   },
   {
     number: "04",
