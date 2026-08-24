@@ -7,10 +7,12 @@ const CROP = "absolute h-3 w-3 border-ink/40";
 
 export default function PlaceholderVisual({
   index,
+  total,
   tone = "paper",
   label,
 }: {
   index: string;
+  total: number;
   tone?: "paper" | "ink";
   label: string;
 }) {
@@ -74,7 +76,9 @@ export default function PlaceholderVisual({
         }`}
       >
         <span>{label}</span>
-        <span>{index} / 03</span>
+        <span>
+          {index} / {String(total).padStart(2, "0")}
+        </span>
       </div>
 
       <span

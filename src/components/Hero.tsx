@@ -108,8 +108,7 @@ export default function Hero() {
       >
         <div className="hero-fade flex flex-wrap items-center justify-between gap-x-6 gap-y-2 font-mono text-[11px] uppercase tracking-[0.14em] text-paper/55">
           <span>Grafisch Vormgever</span>
-          <span className="hidden sm:inline">Creative Design</span>
-          <span>AI &amp; Design</span>
+          <span>UP International</span>
         </div>
 
         <div className="flex flex-1 flex-col justify-center">
@@ -123,9 +122,9 @@ export default function Hero() {
           </h1>
 
           <div className="hero-fade hero-sub-fade mt-6 max-w-xl font-mono text-xs uppercase leading-relaxed tracking-[0.14em] text-paper/70 sm:text-sm md:mt-8">
-            Grafisch vormgever met oog voor detail — ik ontwikkel merken,
-            redactionele systemen en digitale ervaringen, en zet AI in om
-            het creatieve proces verder te brengen.
+            Grafisch vormgever bij UP International — ik ontwikkel merken,
+            redactionele systemen en digitale vormgeving, van concept tot
+            in detail uitgewerkt.
           </div>
         </div>
 

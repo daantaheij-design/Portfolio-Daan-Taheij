@@ -10,13 +10,18 @@ export default function SelectedWork() {
           <RevealLine>Geselecteerd Werk</RevealLine>
         </h2>
         <span className="hidden font-mono text-xs uppercase tracking-[0.14em] text-muted sm:block">
-          (Index — 03)
+          (Index — {String(projects.length).padStart(2, "0")})
         </span>
       </div>
 
       <div>
         {projects.map((project, i) => (
-          <ProjectRow key={project.slug} project={project} index={i} />
+          <ProjectRow
+            key={project.slug}
+            project={project}
+            index={i}
+            total={projects.length}
+          />
         ))}
       </div>
     </section>

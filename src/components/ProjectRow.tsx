@@ -12,9 +12,11 @@ import type { Project } from "@/data/projects";
 export default function ProjectRow({
   project,
   index,
+  total,
 }: {
   project: Project;
   index: number;
+  total: number;
 }) {
   const root = useRef<HTMLDivElement>(null);
   const magnetic = useRef<HTMLDivElement>(null);
@@ -146,6 +148,7 @@ export default function ProjectRow({
           <div className="project-visual-inner">
             <PlaceholderVisual
               index={project.number}
+              total={total}
               tone={overlay ? "ink" : "paper"}
               label={project.category}
             />

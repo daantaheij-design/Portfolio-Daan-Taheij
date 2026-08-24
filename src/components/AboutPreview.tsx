@@ -1,12 +1,11 @@
-import { FadeUp, RevealLine } from "./Reveal";
+import { FadeUp, RevealLine, ScaleReveal } from "./Reveal";
 import { skills } from "@/data/skills";
-import HorizontalMarquee from "./HorizontalMarquee";
 
 const facts = [
   { label: "Gevestigd", value: "Nederland" },
   { label: "Huidige rol", value: "UP International" },
-  { label: "Software", value: "Illustrator, Photoshop, InDesign" },
-  { label: "Verkent", value: "AI in creatieve workflows" },
+  { label: "Focus", value: "Grafisch ontwerp & concept" },
+  { label: "Tools", value: "Illustrator, Photoshop, InDesign, AI" },
 ];
 
 export default function AboutPreview() {
@@ -22,11 +21,9 @@ export default function AboutPreview() {
             <RevealLine>Ik ben Daan Taheij, grafisch</RevealLine>
             <RevealLine delay={0.06}>vormgever bij UP International.</RevealLine>
             <RevealLine delay={0.12}>
-              Ik werk graag op het <span className="text-muted">snijvlak</span>
+              Ik ontwerp <span className="text-muted">merken,</span>
             </RevealLine>
-            <RevealLine delay={0.18}>
-              van vormgeving, technologie en nieuwe ideeën.
-            </RevealLine>
+            <RevealLine delay={0.18}>concepten en digitale vormgeving.</RevealLine>
           </h2>
 
           <div className="col-span-3 flex flex-col justify-end">
@@ -45,28 +42,28 @@ export default function AboutPreview() {
 
         <FadeUp delay={0.24} className="mt-14 md:mt-20">
           <p className="max-w-2xl font-mono text-sm uppercase leading-relaxed tracking-[0.06em] text-muted md:text-base">
-            Van Illustrator en Photoshop tot InDesign — en steeds vaker AI,
-            om het creatieve proces te versnellen, ideeën sneller te
-            ontwikkelen en nieuwe ontwerpmogelijkheden te verkennen.
+            Mijn basis ligt in Illustrator, Photoshop en InDesign, met een
+            focus op grafisch ontwerp en creatieve conceptontwikkeling.
+            Daarnaast volg ik graag nieuwe technologie zoals AI, en wat die
+            binnen het ontwerpproces kan betekenen.
           </p>
         </FadeUp>
       </div>
 
-      <FadeUp delay={0.1} y={40} className="mt-20 border-t border-ink/12 md:mt-28">
+      <div className="mt-20 border-t border-ink/12 px-6 md:mt-28 md:px-10">
         {skills.map((skill, i) => (
-          <div
-            key={skill.label}
-            className="group border-b border-ink/12 py-3 md:py-5"
-          >
-            <HorizontalMarquee
-              text={skill.label}
-              reverse={i % 2 === 1}
-              repeat={8}
-              textClassName="font-display font-semibold uppercase leading-none tracking-tight text-ink/90 text-[15vw] sm:text-[10vw] md:text-[7.5vw] transition-colors duration-300 group-hover:text-ink/40"
-            />
-          </div>
+          <ScaleReveal key={skill.label} delay={i * 0.07}>
+            <div className="group flex items-baseline gap-4 border-b border-ink/12 py-5 md:gap-8 md:py-7">
+              <span className="font-mono text-xs text-muted md:text-sm">
+                {String(i + 1).padStart(2, "0")}
+              </span>
+              <span className="font-display font-semibold uppercase leading-none tracking-tight text-ink/90 transition-colors duration-300 group-hover:text-ink/45 text-[11vw] sm:text-[7vw] md:text-[4.4vw]">
+                {skill.label}
+              </span>
+            </div>
+          </ScaleReveal>
         ))}
-      </FadeUp>
+      </div>
     </section>
   );
 }
