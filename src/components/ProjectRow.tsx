@@ -134,11 +134,6 @@ export default function ProjectRow({
             <h3 className="font-display overflow-hidden text-3xl font-semibold uppercase leading-[0.95] tracking-tight sm:text-5xl md:text-7xl">
               <RevealLine>{project.name}</RevealLine>
             </h3>
-            {project.context && (
-              <span className="mt-1 block font-mono text-xs uppercase tracking-[0.1em] text-muted md:text-sm">
-                {project.context}
-              </span>
-            )}
           </div>
         </div>
         <span className="relative hidden shrink-0 font-mono text-xs text-muted md:block">
