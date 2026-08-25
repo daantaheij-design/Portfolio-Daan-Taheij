@@ -57,6 +57,12 @@ export const projects: Project[] = [
     name: "Klantenlogo's",
     category: "Logo-ontwerp / Identiteit",
     year: "2022 — Doorlopend",
+    coverImage: "/images/hero/klant-1.webp",
+    images: [
+      "/images/hero/klant-1.webp",
+      "/images/hero/klant-2.webp",
+      "/images/hero/klant-3.webp",
+    ],
   },
   {
     number: "05",
