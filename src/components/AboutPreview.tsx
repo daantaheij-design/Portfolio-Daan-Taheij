@@ -21,7 +21,7 @@ export default function AboutPreview() {
             <RevealLine>Mijn naam is Daan Taheij</RevealLine>
             <RevealLine delay={0.06}>en ik ben</RevealLine>
             <RevealLine delay={0.12}>
-              <span className="text-muted">grafisch vormgever</span>
+              <span className="text-accent">grafisch vormgever</span>
             </RevealLine>
           </h2>
 
@@ -56,7 +56,7 @@ export default function AboutPreview() {
               <span className="font-mono text-xs text-muted md:text-sm">
                 {String(i + 1).padStart(2, "0")}
               </span>
-              <span className="font-display font-semibold uppercase leading-none tracking-tight text-ink/90 transition-colors duration-300 group-hover:text-ink/45 text-[11vw] sm:text-[7vw] md:text-[4.4vw]">
+              <span className="font-display font-semibold uppercase leading-none tracking-tight text-ink/90 transition-colors duration-300 group-hover:text-accent text-[11vw] sm:text-[7vw] md:text-[4.4vw]">
                 {skill.label}
               </span>
             </div>

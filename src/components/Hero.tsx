@@ -132,6 +132,10 @@ export default function Hero() {
           aria-hidden
           className="hero-fade hero-portrait pointer-events-none absolute bottom-[16%] right-2 w-[38vw] max-w-[190px] will-change-transform sm:bottom-[15%] sm:right-4 sm:w-[30vw] sm:max-w-[240px] md:bottom-auto md:right-[6%] md:top-1/2 md:w-[21vw] md:max-w-[300px] md:-translate-y-[42%] lg:right-[9%] lg:w-[17vw] lg:max-w-[320px]"
         >
+          <div
+            aria-hidden
+            className="accent-blob absolute -inset-x-8 -inset-y-10 -z-10 opacity-70 mix-blend-screen"
+          />
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={HERO_PHOTO_URL}
@@ -163,6 +167,7 @@ export default function Hero() {
 
         <div className="flex items-end justify-end pt-6">
           <div className="hero-badge relative hidden h-24 w-24 shrink-0 items-center justify-center sm:flex md:h-28 md:w-28">
+            <div className="absolute inset-[18%] rounded-full bg-accent" />
             <div className="animate-spin-slow absolute inset-0">
               <svg viewBox="0 0 100 100" className="h-full w-full">
                 <defs>
@@ -181,7 +186,7 @@ export default function Hero() {
                 </text>
               </svg>
             </div>
-            <span className="font-mono text-[10px] text-paper/70">↓</span>
+            <span className="relative font-mono text-[10px] text-paper">↓</span>
           </div>
         </div>
       </section>

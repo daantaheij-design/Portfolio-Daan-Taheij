@@ -158,7 +158,7 @@ export default function ProjectRow({
       </div>
 
       <div className="mt-4 flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.12em] text-muted md:mt-6">
-        <span>{project.category}</span>
+        <span className="text-accent">{project.category}</span>
         <span className="md:hidden">{project.year}</span>
       </div>
     </div>
