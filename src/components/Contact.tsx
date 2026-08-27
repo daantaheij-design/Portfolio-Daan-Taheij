@@ -82,9 +82,9 @@ export default function Contact() {
         >
           <span className="relative overflow-hidden">
             daantaheij@gmail.com
-            <span className="absolute bottom-0 left-0 h-px w-full origin-left scale-x-100 bg-paper transition-transform duration-500 ease-out group-hover:scale-x-0" />
+            <span className="absolute bottom-0 left-0 h-px w-full origin-left scale-x-100 bg-accent transition-transform duration-500 ease-out group-hover:scale-x-0" />
           </span>
-          <span className="transition-transform duration-300 group-hover:translate-x-1">
+          <span className="text-accent transition-transform duration-300 group-hover:translate-x-1">
             →
           </span>
         </motion.a>

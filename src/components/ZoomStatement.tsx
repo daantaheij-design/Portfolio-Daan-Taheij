@@ -51,7 +51,16 @@ export default function ZoomStatement({
       >
         {lines.map((line, i) => (
           <span key={i} className="block">
-            {line}
+            {line.split(".").map((part, j, arr) =>
+              j < arr.length - 1 ? (
+                <span key={j}>
+                  {part}
+                  <span className="text-accent">.</span>
+                </span>
+              ) : (
+                <span key={j}>{part}</span>
+              )
+            )}
           </span>
         ))}
       </div>

@@ -113,7 +113,7 @@ export default function Navbar() {
               initial={{ y: 40, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.15 + links.length * 0.06, duration: 0.5 }}
-              className="mt-6 font-mono text-sm uppercase tracking-[0.12em] text-muted"
+              className="mt-6 font-mono text-sm uppercase tracking-[0.12em] text-accent"
             >
               daantaheij@gmail.com
             </motion.a>

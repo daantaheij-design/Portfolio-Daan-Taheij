@@ -9,6 +9,10 @@
   --color-line: rgba(12, 11, 10, 0.14);
   --color-line-invert: rgba(244, 241, 234, 0.2);
 
+  --color-accent: #ff4b1f;
+  --color-accent-soft: #ffe4d6;
+  --color-accent-2: #3d5aff;
+
   --font-display: var(--font-display), "Bricolage Grotesque", sans-serif;
   --font-sans: var(--font-sans), "Instrument Sans", sans-serif;
   --font-mono: var(--font-mono), "IBM Plex Mono", monospace;
@@ -37,7 +41,7 @@ body {
 }
 
 ::selection {
-  background: var(--color-ink);
+  background: var(--color-accent);
   color: var(--color-paper);
 }
 
@@ -67,6 +71,20 @@ button {
 
 .animate-spin-slow {
   animation: marquee-spin 16s linear infinite;
+}
+
+.accent-blob {
+  background: radial-gradient(
+      circle at 30% 30%,
+      var(--color-accent) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      circle at 70% 65%,
+      var(--color-accent-2) 0%,
+      transparent 55%
+    );
+  filter: blur(60px) saturate(1.2);
 }
 
 .noise-layer {
